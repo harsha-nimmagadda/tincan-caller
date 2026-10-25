@@ -83,3 +83,19 @@ Manual (real devices, on the deployed HTTPS site):
 | Open the installed app in airplane mode: the shell loads and the offline notice shows                                     | ☐              | ☐          |
 | Two phones on one hotspot with no internet: a QR call connects                                                            | ☐              | ☐          |
 | Deploy a new version while in a call: no reload; after hangup the "new version" bar appears; Reload applies it            | ☐              | ☐          |
+
+## TURN, force relay and diagnostics (Phase 7)
+
+Needs Docker. Run a throw-away coturn on the machine that runs the dev server (**test credentials only; never commit real ones**):
+
+```bash
+docker run --rm --network host coturn/coturn \
+  -n --no-cli --lt-cred-mech --realm tincan.test --user test:test \
+  --listening-port 3478 --min-port 49160 --max-port 49200 --fingerprint
+```
+
+1. Settings → **Add TURN server**: `turn:<host-ip>:3478`, username `test`, password `test`. Tap **Test**: it must say "Works".
+2. Turn on **Force relay**. Start a call between two browsers/devices. The call connects and the stats HUD shows route **relay**.
+3. Replace the address with a bogus one (`turn:127.0.0.1:9`) and **Test**: it must say "No relay address".
+4. With the bogus server still enabled, try a call (force relay on). It fails and the ended screen shows the diagnostic "Your TURN server didn't respond" (`data-diagnostic="turn-failed"`).
+5. Remove the TURN server: **Force relay** is switched off and disabled.
