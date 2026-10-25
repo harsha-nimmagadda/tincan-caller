@@ -75,6 +75,8 @@ interface Debug {
   activeTimers: number;
   activeListeners: number;
   liveLocalTracks: number;
+  videoLive: boolean;
+  videoMaxBitrate: number | null;
 }
 export const debugInfo = (page: Page) =>
   page.evaluate(() => (window as unknown as { __tincan: { debug(): Debug } }).__tincan.debug());

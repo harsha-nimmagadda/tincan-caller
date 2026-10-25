@@ -16,7 +16,7 @@ import { encodeToken } from '../token/token';
 import type { IceDescription, Token } from '../token/types';
 import { encodeCtl, parseCtl, type Ctl } from './control';
 import { diagnose } from './diagnostics';
-import { Emitter } from './emitter';
+import { Emitter } from '../util/emitter';
 import { trackGathering, type GatherHandle } from './gather';
 import { buildRtcConfiguration, gatherTimeoutMs, hasTurn } from './ice-config';
 import { MediaBridge } from './media-bridge';
@@ -79,6 +79,7 @@ export class CallSession {
   private localAudio: MediaStreamTrack | null = null;
   private localVideo: MediaStreamTrack | null = null;
   private localMedia: MediaState | null = null;
+  private videoBitrate: number | null = null;
   private prevStats: StatsSnapshot | null = null;
   private connectTimer: ReturnType<typeof setTimeout> | null = null;
   private disconnectTimer: ReturnType<typeof setTimeout> | null = null;
@@ -204,6 +205,17 @@ export class CallSession {
     await this.bridge?.attachLocal(audio, video);
   }
 
+  /** Cap the outgoing video bitrate (bits/s), e.g. `maxBitrate(quality)`; null removes the cap. */
+  async setMaxVideoBitrate(bps: number | null): Promise<void> {
+    this.videoBitrate = bps;
+    await this.bridge?.setMaxVideoBitrate(bps);
+  }
+
+  /** The cap currently on the video sender (for tests). */
+  get videoMaxBitrate(): number | null {
+    return this.bridge?.videoMaxBitrate() ?? null;
+  }
+
   sendMediaState(s: MediaState): void {
     this.localMedia = s;
     this.send({ t: 'media', mic: s.mic, cam: s.cam });
@@ -254,6 +266,7 @@ export class CallSession {
     this.pc = pc;
     const bridge = new MediaBridge(pc);
     this.bridge = bridge;
+    await bridge.setMaxVideoBitrate(this.videoBitrate);
     await bridge.attachLocal(this.localAudio, this.localVideo);
 
     const negotiation = new Negotiation({
@@ -263,6 +276,7 @@ export class CallSession {
       beforeAnswer: () => bridge.prepareForAnswer(),
       onSettled: () => {
         this.mediaNegotiated = true;
+        void bridge.applyBitrate();
         this.maybeConnected();
       },
     });

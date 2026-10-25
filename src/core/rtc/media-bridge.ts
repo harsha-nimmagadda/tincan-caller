@@ -10,7 +10,36 @@ export class MediaBridge {
   private local: Record<Kind, MediaStreamTrack | null> = { audio: null, video: null };
   private tx: Partial<Record<Kind, RTCRtpTransceiver>> = {};
 
+  private maxVideoBitrate: number | null = null;
+
   constructor(private readonly pc: RTCPeerConnection) {}
+
+  /** Cap on the video sender (bits/s); null = browser default. Re-applied after each negotiation. */
+  async setMaxVideoBitrate(bps: number | null): Promise<void> {
+    this.maxVideoBitrate = bps;
+    await this.applyBitrate();
+  }
+
+  /** The cap currently set on the video sender, for tests and diagnostics. */
+  videoMaxBitrate(): number | null {
+    return this.tx.video?.sender.getParameters().encodings?.[0]?.maxBitrate ?? null;
+  }
+
+  async applyBitrate(): Promise<void> {
+    const sender = this.tx.video?.sender;
+    const bps = this.maxVideoBitrate;
+    if (!sender || bps === null) return;
+    try {
+      const params = sender.getParameters();
+      const enc = params.encodings?.[0];
+      // `encodings` is empty until the first negotiation has completed.
+      if (!enc || enc.maxBitrate === bps) return;
+      enc.maxBitrate = bps;
+      await sender.setParameters(params);
+    } catch {
+      /* some engines reject setParameters before connection; retried after the next negotiation */
+    }
+  }
 
   async attachLocal(audio: MediaStreamTrack | null, video: MediaStreamTrack | null): Promise<void> {
     this.local = { audio, video };
@@ -50,5 +79,6 @@ export class MediaBridge {
       const t = this.tx[kind];
       if (t && t.sender.track !== this.local[kind]) await t.sender.replaceTrack(this.local[kind]);
     }
+    await this.applyBitrate();
   }
 }

@@ -59,10 +59,21 @@
     <section>
       <button data-testid="btn-mic">Mic</button>
       <button data-testid="btn-cam">Cam</button>
+      <button data-testid="btn-flip" hidden>Flip</button>
       <button data-testid="btn-hangup">Hang up</button>
       <span data-testid="remote-mic-off" hidden>[remote mic off]</span>
       <span data-testid="remote-cam-off" hidden>[remote cam off]</span>
       <button data-testid="tap-to-play" hidden>Tap to start audio</button>
+    </section>
+    <section>
+      mic
+      <select data-testid="sel-audioinput"></select>
+      cam
+      <select data-testid="sel-videoinput"></select>
+      speaker
+      <select data-testid="sel-audiooutput"></select>
+      · facing: <b data-testid="local-facing"></b> · mirror: <b data-testid="local-mirror"></b> ·
+      notice: <b data-testid="notice"></b>
     </section>
     <section>
       <video data-testid="local-video" autoplay muted playsinline></video>

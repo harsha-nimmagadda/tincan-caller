@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { GATHER_TIMEOUT_MS } from '../../src/config';
-import { Emitter } from '../../src/core/rtc/emitter';
+import { Emitter } from '../../src/core/util/emitter';
 import { trackGathering, type GatherTarget } from '../../src/core/rtc/gather';
 import {
   buildRtcConfiguration,
