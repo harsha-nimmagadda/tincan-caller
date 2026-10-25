@@ -55,6 +55,16 @@ describe('settings', () => {
     expect(s.stun).toEqual(['stun:ok.example']);
     expect(s.turn).toEqual([{ urls: 'turns:t.example', enabled: true }]);
     expect(s.relays).toEqual(['wss://ok.example']);
+    expect(
+      parseSettings({
+        relays: [
+          'ws://localhost:7777',
+          'ws://127.0.0.1',
+          'ws://evil.example',
+          'ws://localhost.evil.com',
+        ],
+      }).relays,
+    ).toEqual(['ws://localhost:7777', 'ws://127.0.0.1']);
     expect(s.quality).toBe('auto');
     expect(s.forceRelay).toBe(false);
     expect(s.startMicOn).toBe(true);

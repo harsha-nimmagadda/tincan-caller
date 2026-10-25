@@ -14,8 +14,14 @@ const read = (f) => readFileSync(join(dist, f), 'utf8');
 
 const html = read('index.html');
 // The HTML serializer escapes quotes in attribute values; browsers decode them, so we do too.
-const decode = (t) => t.replace(/&#39;|&apos;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&');
-const csp = decode(/http-equiv="Content-Security-Policy"\s+content="([^"]*)"/.exec(html)?.[1] ?? '');
+const decode = (t) =>
+  t
+    .replace(/&#39;|&apos;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, '&');
+const csp = decode(
+  /http-equiv="Content-Security-Policy"\s+content="([^"]*)"/.exec(html)?.[1] ?? '',
+);
 check(csp !== '', 'index.html has no Content-Security-Policy meta');
 for (const d of [
   "default-src 'self'",
@@ -91,10 +97,23 @@ check(
   `initial JS ${(gz / 1024).toFixed(1)} KB gzip exceeds ${INITIAL_JS_BUDGET_GZIP / 1024} KB`,
 );
 
+// Relay mode (nostr-tools + its crypto) must be a lazily loaded chunk, never part of the initial load.
+const RELAY_MARKER = 'tincan-relay-v1'; // the HKDF salt: it lives only in the relay transport chunk
+const jsFiles = files.filter((f) => f.endsWith('.js')).map((f) => f.replace(/\\/g, '/'));
+const relayChunks = jsFiles.filter((f) => read(f).includes(RELAY_MARKER));
+check(relayChunks.length === 1, `expected exactly one relay chunk, found ${relayChunks.length}`);
+check(
+  relayChunks.every((f) => !initial.includes(f)),
+  'the relay chunk is loaded up front (nostr-tools must be lazy)',
+);
+for (const f of initial) check(!read(f).includes(RELAY_MARKER), `${f} (initial) contains relay code`);
+const relayChunk = relayChunks[0];
+const relayKB = relayChunk ? gzipSync(readFileSync(join(dist, relayChunk))).length / 1024 : 0;
+
 if (failures.length) {
   console.error(failures.map((f) => `✗ ${f}`).join('\n'));
   process.exit(1);
 }
 console.log(
-  `build ok: CSP strict, no test code, PWA files present, initial JS ${(gz / 1024).toFixed(1)} KB gzip (budget 180)`,
+  `build ok: CSP strict, no test code, PWA files present, initial JS ${(gz / 1024).toFixed(1)} KB gzip (budget 180), relay chunk ${relayKB.toFixed(1)} KB gzip loaded on demand`,
 );

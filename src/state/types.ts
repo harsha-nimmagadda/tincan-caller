@@ -5,11 +5,21 @@ import type { AccessErrorKind, MediaNotice } from '../core/media/media-controlle
 import type { FailReason, MediaState, SessionState } from '../core/rtc/session-types';
 import type { Telemetry } from '../core/rtc/stats';
 import type { Settings } from '../core/settings/settings';
+import type { RelayStatus } from '../core/signaling/relay/relay-controller';
 import type { MessageKey } from '../i18n';
 
 export type Screen =
   'home' | 'lobby' | 'create' | 'join' | 'in-call' | 'ended' | 'settings' | 'about' | 'bridge';
 export type Role = 'caller' | 'callee';
+export type Mode = 'manual' | 'relay';
+
+export interface RelayView {
+  status: RelayStatus;
+  /** The shareable `#r=` link. */
+  link: string;
+  /** The person who made the link (sees "Share this link"). */
+  creator: boolean;
+}
 
 export interface ToastItem {
   id: number;
@@ -123,7 +133,29 @@ export interface CallSlice {
   openBridge(token: string): Promise<void>;
 }
 
-export type AppState = UiSlice & SettingsSlice & MediaSlice & CallSlice;
+export interface RelaySlice {
+  /** The signaling mode chosen in the lobby / by the link. */
+  mode: Mode;
+  relay: RelayView | null;
+  /** A relay call lost its connection and is looking for the peer again. */
+  relayWaiting: boolean;
+  /** Asking permission to use relays (never stored silently): from the lobby or from a `#r=` link. */
+  relayConsent: 'lobby' | 'link' | null;
+  /** The call ended because the peer hung up, and the room could be re-entered. */
+  relayCanRejoin: boolean;
+  pendingRelaySecret: Uint8Array | null;
+
+  setLobbyMode(mode: Mode): void;
+  allowRelay(): void;
+  denyRelay(): void;
+  openRelayLink(value: string): void;
+  startRelayRoom(): Promise<void>;
+  resumeRelay(): Promise<void>;
+  switchToManual(): Promise<void>;
+  rejoinRelay(): void;
+}
+
+export type AppState = UiSlice & SettingsSlice & MediaSlice & CallSlice & RelaySlice;
 export type StoreSet = (partial: Partial<AppState> | ((s: AppState) => Partial<AppState>)) => void;
 export type StoreGet = () => AppState;
 

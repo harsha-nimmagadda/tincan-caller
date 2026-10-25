@@ -42,6 +42,8 @@ export function Settings() {
   const reset = useStore((s) => s.resetSettings);
   const go = useStore((s) => s.go);
   const [stunText, setStunText] = useState(settings.stun.join('\n'));
+  const [relayText, setRelayText] = useState(settings.relays.join('\n'));
+  const [tests, setTests] = useState<Record<string, 'testing' | 'ok' | 'fail'>>({});
   const lines = stunText
     .split('\n')
     .map((l) => l.trim())
@@ -57,6 +59,34 @@ export function Settings() {
       .filter(Boolean);
     // An emptied list is allowed on purpose: LAN-only calls.
     update({ stun: entries.length === 0 ? [] : parseSettings({ stun: entries }).stun });
+  };
+
+  const relayLines = relayText
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const relayInvalid = relayLines.length - parseSettings({ relays: relayLines }).relays.length;
+
+  const saveRelays = (text: string) => {
+    setRelayText(text);
+    const entries = text
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean);
+    update({ relays: parseSettings({ relays: entries }).relays });
+  };
+
+  /** Connect to each relay and wait for it to answer a subscription (EOSE) within 5 s. */
+  const testRelays = async () => {
+    const urls = parseSettings({ relays: relayLines }).relays;
+    setTests(Object.fromEntries(urls.map((u) => [u, 'testing' as const])));
+    const { testRelay } = await import('../../core/signaling/relay/nostr-transport');
+    await Promise.all(
+      urls.map(async (u) => {
+        const ok = await testRelay(u, 5000);
+        setTests((prev) => ({ ...prev, [u]: ok ? 'ok' : 'fail' }));
+      }),
+    );
   };
 
   return (
@@ -93,6 +123,54 @@ export function Settings() {
           </p>
         ) : null}
         {lines.length === 0 ? <p className="muted">{t('settings.stunEmpty')}</p> : null}
+      </section>
+
+      <section className="card space-y-3" aria-labelledby="relay-h">
+        <h2 id="relay-h" className="font-semibold">
+          {t('settings.relays')}
+        </h2>
+        <p className="muted">{t('settings.relaysHelp')}</p>
+        <Toggle
+          id="relay-enabled"
+          label={t('settings.relayEnabled')}
+          checked={settings.relayEnabled}
+          onChange={(v) => update({ relayEnabled: v })}
+        />
+        <textarea
+          data-testid="relay-list"
+          aria-label={t('settings.relayList')}
+          className="field h-24 font-mono text-sm"
+          value={relayText}
+          onChange={(e) => saveRelays(e.target.value)}
+        />
+        {relayInvalid > 0 ? (
+          <p role="alert" className="text-amber-300">
+            {t('settings.relayInvalid', { count: relayInvalid })}
+          </p>
+        ) : null}
+        <button
+          type="button"
+          className="btn"
+          data-testid="relay-test"
+          disabled={relayLines.length === 0}
+          onClick={() => void testRelays()}
+        >
+          {t('settings.relayTest')}
+        </button>
+        <ul className="space-y-1" data-testid="relay-test-results" aria-live="polite">
+          {Object.entries(tests).map(([url, state]) => (
+            <li key={url} data-state={state} data-url={url} className="font-mono text-sm">
+              {t(
+                state === 'ok'
+                  ? 'settings.relayOk'
+                  : state === 'fail'
+                    ? 'settings.relayFail'
+                    : 'settings.relayTesting',
+                { url },
+              )}
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section className="card space-y-3" aria-labelledby="call-h">
@@ -141,6 +219,8 @@ export function Settings() {
         onClick={() => {
           reset();
           setStunText(useStore.getState().settings.stun.join('\n'));
+          setRelayText(useStore.getState().settings.relays.join('\n'));
+          setTests({});
         }}
       >
         {t('settings.reset')}

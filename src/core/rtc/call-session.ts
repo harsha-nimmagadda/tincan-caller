@@ -36,6 +36,11 @@ export interface SessionOptions {
   settings: Settings;
   appVersion?: string;
   isOnline?: () => boolean;
+  /**
+   * Send `bye` when the page is being unloaded (default). Relay mode turns this off: a reload is a
+   * dropout the other side should reconnect from, not a hangup.
+   */
+  byeOnPageHide?: boolean;
   /** Debug-only trace sink; never receives tokens or SDP. */
   log?: (line: string) => void;
 }
@@ -301,7 +306,15 @@ export class CallSession {
     if (pc.connectionState === undefined) {
       this.listen(pc, 'iceconnectionstatechange', () => this.onConnectionState());
     }
-    this.listen(globalThis, 'pagehide', () => this.hangup());
+    this.listen(globalThis, 'pagehide', () => {
+      if (this.opts.byeOnPageHide !== false) return this.hangup();
+      // Relay mode: the page is going away (reload/close). Release the connection silently: no
+      // `bye`, and no `ended` state (which would make the app forget its room). The peer sees a
+      // dropout and searches again; this page rejoins on load.
+      if (this.finished) return;
+      this.finished = true;
+      this.teardown();
+    });
 
     const ctl = pc.createDataChannel('ctl', { negotiated: true, id: 0, ordered: true });
     this.ctl = ctl;

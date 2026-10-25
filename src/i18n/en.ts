@@ -34,6 +34,14 @@ export const en = {
   'lobby.audioOnly': 'Audio only',
   'lobby.quality': 'Video quality',
 
+  'lobby.mode': 'How to connect',
+  'lobby.modeManual': 'Manual code',
+  'lobby.modeManualHint': 'Swap an invite and a reply yourself. Nothing else is involved.',
+  'lobby.modeRelay': 'Automatic (relays)',
+  'lobby.modeRelayHint':
+    'Share one link; public relay servers pass along encrypted setup messages.',
+  'lobby.joiningRelay': 'You are joining through a link that uses relay servers.',
+
   'quality.auto': 'Automatic (720p)',
   'quality.dataSaver': 'Data saver (360p)',
   'quality.high': 'High (1080p)',
@@ -238,6 +246,48 @@ export const en = {
   'frame.title': 'Tincan can’t run inside another page',
   'frame.open': 'Open Tincan directly',
 
+  'relay.statusAria': 'Connection progress',
+  'relay.relays': 'Relays connected: {connected} of {total}',
+  'relay.phaseConnecting': 'Connecting to relays…',
+  'relay.phaseWaiting': 'Waiting for the other person…',
+  'relay.phasePeer': 'Found them — connecting…',
+  'relay.phaseConnected': 'Connected',
+  'relay.phaseLeft': 'Left the room',
+  'relay.shareTitle': 'Share this link',
+  'relay.shareBody':
+    'Send this link to the other person, or show them the QR code. Keep this page open: the call starts when they open it.',
+  'relay.joinTitle': 'Connecting via relays…',
+  'relay.unreachable':
+    'Couldn’t reach the relays. Check your connection, or use a manual invite instead.',
+  'relay.switchManual': 'Switch to manual invite',
+
+  'consent.title': 'Use relay servers for this call?',
+  'consent.seesTitle': 'What the relays can see',
+  'consent.sees1': 'Your IP address, as for any website you visit.',
+  'consent.sees2': 'When you connect and that a few small messages were exchanged.',
+  'consent.sees3': 'An encrypted blob they cannot read.',
+  'consent.hiddenTitle': 'What they can’t see',
+  'consent.hidden1': 'Your call: it never goes through a relay.',
+  'consent.hidden2':
+    'The connection details inside the messages (they are encrypted with a key that only lives in the link).',
+  'consent.hidden3': 'Who you are calling.',
+  'consent.allow': 'Allow for this call',
+
+  'ended.rejoin': 'Wait for them to rejoin',
+
+  'settings.relays': 'Relay signaling',
+  'settings.relaysHelp':
+    'Lets a call set itself up from one shared link. Relays are public servers; they only pass along encrypted messages. Off by default.',
+  'settings.relayEnabled': 'Use relays without asking each time',
+  'settings.relayList': 'Relay servers (one wss:// address per line)',
+  'settings.relayInvalid': '{count} line(s) are not valid wss:// addresses and were ignored.',
+  'settings.relayTest': 'Test relays',
+  'settings.relayTesting': 'Testing {url}…',
+  'settings.relayOk': 'Works: {url}',
+  'settings.relayFail': 'No answer: {url}',
+
+  'toast.relayThirdParty': 'Someone else opened this link. The call is unaffected.',
+  'toast.relayBadLink': 'That relay link is not valid.',
   'toast.copied': 'Copied',
   'toast.copyManual': 'Select the text and press Ctrl or Cmd + C to copy',
   'toast.cameraUnavailable': 'No camera available — continuing with audio only',
@@ -248,6 +298,5 @@ export const en = {
   'toast.deviceSwitchFailed': 'Could not switch to that device',
   'toast.deviceFallback': 'That device was disconnected — using the default one',
   'toast.pipFailed': 'Picture in picture is not available right now',
-  'toast.relayUnavailable': 'Automatic (relay) links are not supported yet',
   'toast.settingsNotSaved': 'Settings could not be saved in this browser',
 } as const;

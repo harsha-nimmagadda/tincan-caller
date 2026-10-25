@@ -7,7 +7,7 @@ export const DEFAULT_RELAYS = [
   'wss://relay.primal.net',
   'wss://nostr.mom',
 ];
-// ↑ Phase 6 must verify each with scripts/relay-smoke.ts; drop any that reject kind 25050.
+// ↑ Verified with `pnpm relay-smoke` (all four passed; damus failed once, transiently). Re-run before releases.
 export const GATHER_TIMEOUT_MS = 3000; // 5000 when any TURN server configured
 export const CONNECT_TIMEOUT_MS = 20000; // after both descriptions applied
 export const DISCONNECT_GRACE_MS = 3000; // 'disconnected' this long → restartIce

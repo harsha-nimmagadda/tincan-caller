@@ -4,6 +4,7 @@ import { CodeBox } from '../components/CodeBox';
 import { ErrorPanel } from '../components/ErrorPanel';
 import { CopyIcon, ShareIcon } from '../components/Icons';
 import { QrCode } from '../components/QrCode';
+import { RelayStatus } from '../components/RelayStatus';
 
 export function JoinCall() {
   const reply = useStore((s) => s.reply);
@@ -13,6 +14,29 @@ export function JoinCall() {
   const goHome = useStore((s) => s.goHome);
   const copy = useStore((s) => s.copy);
   const share = useStore((s) => s.share);
+  const relay = useStore((s) => s.relay);
+
+  if (relay) {
+    return (
+      <main className="page">
+        <header className="flex items-center justify-between">
+          <h1 className="text-xl font-semibold">{t('join.title')}</h1>
+          <button
+            type="button"
+            className="btn btn-ghost"
+            data-testid="cancel-call"
+            onClick={goHome}
+          >
+            {t('common.cancel')}
+          </button>
+        </header>
+        <section className="card space-y-3">
+          <h2 className="font-semibold">{t('relay.joinTitle')}</h2>
+          <RelayStatus />
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="page">

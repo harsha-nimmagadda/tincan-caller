@@ -30,6 +30,7 @@ export function InCall() {
   const hudOpen = useStore((s) => s.hudOpen);
   const moreOpen = useStore((s) => s.moreOpen);
   const safetyOpen = useStore((s) => s.safetyOpen);
+  const relayWaiting = useStore((s) => s.relayWaiting);
   const blocked = useStore((s) => s.autoplayBlocked);
   const setBlocked = useStore((s) => s.setAutoplayBlocked);
   const [fit, setFit] = useState<'contain' | 'cover'>('contain');
@@ -105,7 +106,7 @@ export function InCall() {
         <SafetyBadge />
       </div>
 
-      {status === 'reconnecting' ? (
+      {status === 'reconnecting' || relayWaiting ? (
         <div
           role="status"
           data-testid="reconnecting"

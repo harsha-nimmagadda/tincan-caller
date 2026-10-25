@@ -7,7 +7,7 @@ import { STATS_INTERVAL_MS } from '../config';
 import { buildLink, extractToken, parseTokenInput } from '../core/signaling/link';
 import { listenForAnswers, sendAnswer } from '../core/signaling/tab-bridge';
 import { tokenErrorMessage } from './errors';
-import { call, getMedia, wakeLock } from './services';
+import { call, getMedia, hooks, wakeLock } from './services';
 import type { CallSlice, EndInfo, StoreGet, StoreSet } from './types';
 
 const baseUrl = () => `${location.origin}${location.pathname}`;
@@ -37,6 +37,9 @@ const FRESH = {
   telemetry: null,
   callStartedAt: null,
   autoplayBlocked: false,
+  relay: null,
+  relayWaiting: false,
+  relayConsent: null,
 } as const;
 
 export function createCallSlice(set: StoreSet, get: StoreGet): CallSlice {
@@ -112,8 +115,10 @@ export function createCallSlice(set: StoreSet, get: StoreGet): CallSlice {
     teardownEffects();
     call.session = null;
     get().stopMedia();
+    const relayCanRejoin = hooks.relay?.onCallFinished(st) ?? false;
     set({
       ...FRESH,
+      relayCanRejoin,
       session: st,
       endInfo,
       screen: 'ended',
@@ -126,6 +131,7 @@ export function createCallSlice(set: StoreSet, get: StoreGet): CallSlice {
 
   const onState = (st: SessionState) => {
     set({ session: st });
+    if (hooks.relay?.handleState(st)) return;
     if (st.status === 'awaiting-answer') {
       // Same-browser reply links hand their code to this tab (§8.3).
       stopBridge ??= listenForAnswers(async (token) => {
@@ -146,9 +152,14 @@ export function createCallSlice(set: StoreSet, get: StoreGet): CallSlice {
     if (st.status === 'ended' || st.status === 'failed') finishCall(st);
   };
 
-  const newSession = (): CallSession => {
+  const newSession = (relayMode = false): CallSession => {
     const { settings } = get();
-    const s = new CallSession({ settings, appVersion: APP_VERSION });
+    const s = new CallSession({
+      settings,
+      appVersion: APP_VERSION,
+      // A reload in relay mode is a dropout to reconnect from, not a hangup.
+      byeOnPageHide: !relayMode,
+    });
     call.session = s;
     call.last = s;
     const current =
@@ -199,6 +210,19 @@ export function createCallSlice(set: StoreSet, get: StoreGet): CallSlice {
     }
   };
 
+  /** After a relay reconnect: the call screen stays; stats and per-connection state start over. */
+  const resumeCall = () => {
+    if (telemetryTimer) clearTimeout(telemetryTimer);
+    set({
+      relayWaiting: false,
+      remoteMedia: { mic: true, cam: true },
+      sas: null,
+      sasVerified: false,
+      telemetry: null,
+    });
+    startTelemetry();
+  };
+
   const acceptInvite = async () => {
     const offer = get().pendingOffer;
     if (!offer) return;
@@ -216,6 +240,16 @@ export function createCallSlice(set: StoreSet, get: StoreGet): CallSlice {
     }
   };
 
+  hooks.internals = {
+    newSession,
+    attachLocal,
+    disposeSession,
+    enterCall,
+    resumeCall,
+    finishCall,
+    createInvite,
+  };
+
   return {
     role: null,
     ...FRESH,
@@ -224,7 +258,11 @@ export function createCallSlice(set: StoreSet, get: StoreGet): CallSlice {
 
     startCall: () => {
       get().goHome();
-      set({ role: 'caller', screen: 'lobby' });
+      set({
+        role: 'caller',
+        screen: 'lobby',
+        mode: get().settings.relayEnabled ? 'relay' : 'manual',
+      });
       void get().startMedia();
     },
 
@@ -243,7 +281,8 @@ export function createCallSlice(set: StoreSet, get: StoreGet): CallSlice {
     clearJoinError: () => set({ joinError: null }),
 
     continueFromLobby: async () => {
-      if (get().role === 'caller') await createInvite();
+      if (get().mode === 'relay') await get().startRelayRoom();
+      else if (get().role === 'caller') await createInvite();
       else await acceptInvite();
     },
 
@@ -281,6 +320,7 @@ export function createCallSlice(set: StoreSet, get: StoreGet): CallSlice {
     setAutoplayBlocked: (autoplayBlocked) => set({ autoplayBlocked }),
 
     goHome: () => {
+      hooks.relay?.reset();
       disposeSession();
       teardownEffects();
       get().stopMedia();
@@ -288,6 +328,9 @@ export function createCallSlice(set: StoreSet, get: StoreGet): CallSlice {
       set({
         ...FRESH,
         role: null,
+        mode: 'manual',
+        pendingRelaySecret: null,
+        relayCanRejoin: false,
         endInfo: null,
         bridge: null,
         screen: 'home',

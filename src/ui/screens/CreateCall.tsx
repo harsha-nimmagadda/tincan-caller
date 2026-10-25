@@ -4,6 +4,7 @@ import { useStore } from '../../state/store';
 import { CodeBox } from '../components/CodeBox';
 import { CopyIcon, ShareIcon } from '../components/Icons';
 import { QrCode } from '../components/QrCode';
+import { RelayStatus } from '../components/RelayStatus';
 import { ReplyBox } from '../components/ReplyBox';
 import { useNow } from '../hooks/useNow';
 
@@ -16,7 +17,52 @@ export function CreateCall() {
   const newInvite = useStore((s) => s.newInvite);
   const copy = useStore((s) => s.copy);
   const share = useStore((s) => s.share);
+  const relay = useStore((s) => s.relay);
   const now = useNow(30_000);
+
+  if (relay) {
+    return (
+      <main className="page">
+        <header className="flex items-center justify-between">
+          <h1 className="text-xl font-semibold">{t('create.title')}</h1>
+          <button
+            type="button"
+            className="btn btn-ghost"
+            data-testid="cancel-call"
+            onClick={goHome}
+          >
+            {t('common.cancel')}
+          </button>
+        </header>
+        <section className="card space-y-3" aria-labelledby="relay-h">
+          <h2 id="relay-h" className="font-semibold">
+            {t('relay.shareTitle')}
+          </h2>
+          <p className="muted">{t('relay.shareBody')}</p>
+          <QrCode value={relay.link} testId="relay-qr" />
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="btn"
+              data-testid="relay-share"
+              onClick={() => void share(relay.link)}
+            >
+              <ShareIcon /> {t('common.share')}
+            </button>
+            <button
+              type="button"
+              className="btn"
+              data-testid="relay-copy"
+              onClick={() => void copy(relay.link)}
+            >
+              <CopyIcon /> {t('create.copyLink')}
+            </button>
+          </div>
+          <RelayStatus />
+        </section>
+      </main>
+    );
+  }
 
   const connecting = status === 'connecting' || status === 'negotiating-media';
   const ageMs = createdAt ? now - createdAt : 0;

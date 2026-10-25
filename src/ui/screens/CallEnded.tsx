@@ -32,6 +32,8 @@ export function CallEnded() {
   const startCall = useStore((s) => s.startCall);
   const goHome = useStore((s) => s.goHome);
   const go = useStore((s) => s.go);
+  const canRejoin = useStore((s) => s.relayCanRejoin);
+  const rejoin = useStore((s) => s.rejoinRelay);
   if (!info) return null;
 
   const failed = info.kind === 'failed';
@@ -84,9 +86,19 @@ export function CallEnded() {
       ) : null}
 
       <div className="flex flex-col gap-2">
+        {canRejoin ? (
+          <button
+            type="button"
+            className="btn btn-primary"
+            data-testid="relay-rejoin"
+            onClick={rejoin}
+          >
+            {t('ended.rejoin')}
+          </button>
+        ) : null}
         <button
           type="button"
-          className="btn btn-primary"
+          className={`btn ${canRejoin ? '' : 'btn-primary'}`}
           data-testid="new-call"
           onClick={startCall}
         >

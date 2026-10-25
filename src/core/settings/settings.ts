@@ -44,6 +44,8 @@ export interface StorageLike {
 
 type Rec = Record<string, unknown>;
 const isRec = (v: unknown): v is Rec => typeof v === 'object' && v !== null && !Array.isArray(v);
+/** wss:// anywhere; plain ws:// only for a relay on this machine (tests, self-hosting). */
+const RELAY_URL = /^(wss:\/\/\S+|ws:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/\S*)?)$/;
 const MAX_LIST = 8;
 const MAX_URL = 256;
 
@@ -94,7 +96,7 @@ export function parseSettings(raw: unknown): Settings {
     turn: parseTurn(raw['turn']),
     forceRelay: bool(raw['forceRelay'], d.forceRelay),
     relayEnabled: bool(raw['relayEnabled'], d.relayEnabled),
-    relays: urlList(raw['relays'], /^wss:\/\/\S+$/, [...d.relays]),
+    relays: urlList(raw['relays'], RELAY_URL, [...d.relays]),
     quality: q === 'auto' || q === 'data-saver' || q === 'high' ? q : d.quality,
     startMicOn: bool(raw['startMicOn'], d.startMicOn),
     startCamOn: bool(raw['startCamOn'], d.startCamOn),

@@ -27,6 +27,7 @@ export default defineConfig({
     { name: 'webkit', testMatch: /smoke\.spec/, use: { ...devices['Desktop Safari'] } },
     // Call tests launch their own browsers (two at a time, possibly different engines).
     { name: 'calls', testMatch: /calls\/.*\.spec/, timeout: 90_000 },
+    { name: 'relay', testMatch: /relay\/.*\.spec/, timeout: 120_000 },
     { name: 'pwa', testMatch: /pwa\/.*\.spec/, timeout: 120_000 },
     { name: 'ui', testMatch: /ui\/.*\.spec/, timeout: 90_000 },
   ],

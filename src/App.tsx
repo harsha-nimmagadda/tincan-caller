@@ -5,6 +5,7 @@ import { useStore } from './state/store';
 import type { SessionState } from './core/rtc/session-types';
 import { Dialog } from './ui/components/Dialog';
 import { OfflineBadge } from './ui/components/OfflineBadge';
+import { RelayConsent } from './ui/components/RelayConsent';
 import { ToastHost } from './ui/components/ToastHost';
 import { UpdatePrompt } from './ui/components/UpdatePrompt';
 import { About } from './ui/screens/About';
@@ -70,6 +71,7 @@ function useCallGuards(inCall: boolean) {
 export function App() {
   const screen = useStore((s) => s.screen);
   const confirm = useStore((s) => s.confirm);
+  const consent = useStore((s) => s.relayConsent);
   const askConfirm = useStore((s) => s.askConfirm);
   const hangup = useStore((s) => s.hangup);
   useCallGuards(screen === 'in-call');
@@ -90,6 +92,7 @@ export function App() {
       {screen === 'about' && <About />}
       {screen === 'bridge' && <Bridge />}
       <StateAnnouncer />
+      {consent ? <RelayConsent /> : null}
       <UpdatePrompt />
       <OfflineBadge />
       <ToastHost />

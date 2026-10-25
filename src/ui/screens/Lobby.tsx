@@ -26,6 +26,9 @@ export function Lobby() {
   const proceed = useStore((s) => s.continueFromLobby);
   const quality = useStore((s) => s.settings.quality);
   const update = useStore((s) => s.updateSettings);
+  const mode = useStore((s) => s.mode);
+  const setMode = useStore((s) => s.setLobbyMode);
+  const hasLink = useStore((s) => s.pendingRelaySecret !== null);
   const level = useMicLevel(local.stream, local.micOn);
 
   return (
@@ -112,6 +115,39 @@ export function Lobby() {
             </label>
 
             <DevicePicker />
+
+            {role === 'caller' ? (
+              <fieldset className="space-y-2" data-testid="mode-selector">
+                <legend className="mb-1 text-sm text-slate-300">{t('lobby.mode')}</legend>
+                {(['manual', 'relay'] as const).map((m) => (
+                  <label
+                    key={m}
+                    className="flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border border-slate-700 p-3"
+                  >
+                    <input
+                      type="radio"
+                      name="mode"
+                      className="mt-1 h-5 w-5 accent-sky-500"
+                      data-testid={`mode-${m}`}
+                      checked={mode === m}
+                      onChange={() => setMode(m)}
+                    />
+                    <span>
+                      <span className="block">
+                        {t(m === 'manual' ? 'lobby.modeManual' : 'lobby.modeRelay')}
+                      </span>
+                      <span className="muted block">
+                        {t(m === 'manual' ? 'lobby.modeManualHint' : 'lobby.modeRelayHint')}
+                      </span>
+                    </span>
+                  </label>
+                ))}
+              </fieldset>
+            ) : mode === 'relay' && hasLink ? (
+              <p className="muted" data-testid="mode-relay-link">
+                {t('lobby.joiningRelay')}
+              </p>
+            ) : null}
 
             <label className="block text-sm">
               <span className="mb-1 block text-slate-300">{t('lobby.quality')}</span>
