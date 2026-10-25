@@ -1,0 +1,16 @@
+name: Bug report
+description: Something is broken
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes: { label: What happened?, description: Include steps to reproduce }
+    validations: { required: true }
+  - type: input
+    id: devices
+    attributes: { label: Browsers / devices on both sides }
+  - type: dropdown
+    id: network
+    attributes:
+      label: Network
+      options: [Same Wi-Fi, Wi-Fi to mobile data, Mobile to mobile, Other]
