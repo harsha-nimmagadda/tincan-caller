@@ -5,6 +5,7 @@ import { readText } from '../../core/platform/clipboard';
 import { t } from '../../i18n';
 import { useStore } from '../../state/store';
 import { ErrorPanel } from '../components/ErrorPanel';
+import { IosInstallHint } from '../components/IosInstallHint';
 import { GearIcon, InfoIcon, ScanIcon } from '../components/Icons';
 import { QrScannerDialog } from '../components/QrScannerDialog';
 import { useSettle } from '../hooks/useSettle';
@@ -122,6 +123,7 @@ export function Home() {
         ) : null}
 
         {joinError ? <ErrorPanel message={joinError} /> : null}
+        <IosInstallHint />
         {scanning ? (
           <QrScannerDialog
             onClose={() => setScanning(false)}

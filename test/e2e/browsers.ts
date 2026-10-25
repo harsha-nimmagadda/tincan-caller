@@ -9,6 +9,8 @@ export const launchOptions: Record<EngineName, LaunchOptions> = {
       '--use-fake-ui-for-media-stream',
       '--use-fake-device-for-media-stream',
       '--disable-features=WebRtcHideLocalIpsWithMdns',
+      // Loopback candidates keep calls deterministic in CI and when the network is emulated offline.
+      '--allow-loopback-in-peer-connection',
     ],
   },
   firefox: {
@@ -16,6 +18,7 @@ export const launchOptions: Record<EngineName, LaunchOptions> = {
       'media.navigator.streams.fake': true,
       'media.navigator.permission.disabled': true,
       'media.peerconnection.ice.obfuscate_host_addresses': false,
+      'media.peerconnection.ice.loopback': true,
     },
   },
   webkit: {},

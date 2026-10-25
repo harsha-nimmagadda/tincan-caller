@@ -3,7 +3,7 @@
 Serverless, peer-to-peer 1:1 video calling PWA. No accounts, no backend: you exchange a small invite
 link or QR code and the call goes directly between the two browsers.
 
-> **Status:** under development (Phase 4 of [docs/PLAN.md](docs/PLAN.md)). Not usable yet.
+> **Status:** under development (Phase 5 of [docs/PLAN.md](docs/PLAN.md)). Not usable yet.
 
 ## Limitations (by design)
 
@@ -24,7 +24,7 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm build
 pnpm e2e          # Playwright (run `pnpm exec playwright install` once)
 ```
 
-Forks or custom domains: set `VITE_BASE` (e.g. `VITE_BASE=/tincan-call/ pnpm build`).
+Forks or custom domains: set `VITE_BASE` (e.g. `VITE_BASE=/tincan-caller/ pnpm build`).
 
 ## License
 

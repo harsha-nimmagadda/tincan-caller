@@ -224,6 +224,20 @@ export const en = {
 
   'share.text': 'Join me for a video call:',
 
+  'update.available': 'A new version is available.',
+  'update.reload': 'Reload',
+  'update.later': 'Later',
+
+  'offline.banner': 'You’re offline. Calls work only with someone on the same Wi‑Fi or hotspot.',
+
+  'install.title': 'Install Tincan on your iPhone',
+  'install.body':
+    'Tap the Share button, then “Add to Home Screen”. It then opens like an app and works offline.',
+  'install.dismiss': 'Got it',
+
+  'frame.title': 'Tincan can’t run inside another page',
+  'frame.open': 'Open Tincan directly',
+
   'toast.copied': 'Copied',
   'toast.copyManual': 'Select the text and press Ctrl or Cmd + C to copy',
   'toast.cameraUnavailable': 'No camera available — continuing with audio only',

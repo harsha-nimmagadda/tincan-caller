@@ -21,7 +21,7 @@ Start each chat with:
 
 | Topic | Decision |
 |---|---|
-| Name | **Tincan** (single constant `APP_NAME` in `src/config.ts`). Note: "Tin Can API" is an e-learning standard, so name the repo `tincan-call` for search clarity. |
+| Name | **Tincan** (single constant `APP_NAME` in `src/config.ts`). Note: "Tin Can API" is an e-learning standard, so name the repo `tincan-caller` for search clarity. |
 | Topology | 1:1 only. The code must not assume 1:1 *outside* `CallSession`, so mesh can be added later. |
 | Signaling, default | **Manual**: invite link / QR code / copy-paste (offer → answer). No third party involved. |
 | Signaling, opt-in | **Automatic via public Nostr relays.** Payloads are end-to-end encrypted with a key that lives only in the link's `#fragment`. Off by default; can be enabled in Settings or with a one-time consent prompt when opening such a link. |
@@ -32,7 +32,7 @@ Start each chat with:
 | Identity | None. Every call is a fresh one-time handshake. Only settings are stored (localStorage). |
 | Stack | React 19 + TypeScript 6.0.x + Vite 8 + Tailwind CSS 4 + vite-plugin-pwa 2 + zustand 5. Tests: Vitest 5 + Playwright 1.64. pnpm 10, Node 24 LTS. |
 | Platforms (must work) | Android Chrome (tab and installed PWA), iOS Safari (tab and home-screen PWA), desktop Chrome/Edge, desktop Firefox, desktop Safari. Cross-engine calls must work. |
-| License / host | AGPL-3.0, GitHub Pages at `https://<user>.github.io/tincan-call/` (subpath, so set Vite `base`). |
+| License / host | AGPL-3.0, GitHub Pages at `https://<user>.github.io/tincan-caller/` (subpath, so set Vite `base`). |
 
 ### Hard limits to state honestly in the README
 1. **No ringing.** Without a server nothing can wake a closed app, so both people must have Tincan open.
@@ -89,7 +89,7 @@ The POC lives in `../tincan-poc/` after Phase 0, for reference only. **Port thes
 ## 4. Repository layout (target)
 
 ```
-tincan-call/
+tincan-caller/
   .github/
     workflows/ci.yml            # lint, typecheck, unit, e2e, build
     workflows/deploy.yml        # main → GitHub Pages
@@ -493,7 +493,7 @@ State `screen` in the store: `home | lobby | create | join | in-call | ended | s
 - Relay-mode UI, the TURN editor/Test button and the iOS install hint are deferred to Phases 6, 7 and 5. A `#r=` link currently just shows a notice.
 - `src/testing/` (fake cameras/mics, test hooks) is loaded only when built with `--mode test`; production builds contain none of it.
 - `eslint-plugin-i18next` misses JSX that is an arrow function's expression body, so `pnpm lint` also runs `scripts/check-no-literal-jsx.mjs`.
-- `SOURCE_URL` in `src/config.ts` is a placeholder (`github.com/OWNER/tincan-call`) until the repository exists; set `VITE_SOURCE_URL` at build time or edit it before release (AGPL §13).
+- `SOURCE_URL` in `src/config.ts` defaults to `https://github.com/harsha-nimmagadda/tincan-caller` (AGPL §13); forks override it with `VITE_SOURCE_URL`. The repository is named `tincan-caller` (the plan said `tincan-call`), so the Pages base is `/tincan-caller/`.
 
 ### 8.2 QR
 - Generate with `qrcode.react` (`QRCodeSVG`, `level="M"`, with margin), encoding the **full link**, so phones' native camera apps also work.
@@ -520,7 +520,7 @@ State `screen` in the store: `home | lobby | create | join | in-call | ended | s
 
 ## 9. PWA, security and hosting
 
-- **Vite**: `base: '/tincan-call/'` (from env `VITE_BASE`, default `/`, so forks and custom domains work). Remove the POC `allowedHosts`.
+- **Vite**: `base: '/tincan-caller/'` (from env `VITE_BASE`, default `/`, so forks and custom domains work). Remove the POC `allowedHosts`.
 - **Dev on phones** needs HTTPS (getUserMedia and crypto.subtle require a secure context): add the script `dev:https` using `@vitejs/plugin-basic-ssl` and `--host`.
 - **vite-plugin-pwa**: `registerType: 'prompt'`, `injectRegister: false`; register manually through `virtual:pwa-register/react` in `UpdatePrompt.tsx`. Show "Update available — Reload" **only when `screen` is not `in-call`/`create`/`join`**. Precache `**/*.{js,css,html,png,svg,webmanifest}` including the worker chunk.
 - **Manifest**: `name`, `short_name: 'Tincan'`, `id: './'`, `start_url: './'`, `scope: './'`, `display: 'standalone'`, `background_color` and `theme_color` matching the dark theme, **no `orientation`**, icons 192/512 PNG plus a 512 maskable PNG. Generate them from one SVG with `@vite-pwa/assets-generator` (minimal-2023 preset), including `apple-touch-icon-180x180.png`.
@@ -533,6 +533,8 @@ State `screen` in the store: `home | lobby | create | join | in-call | ended | s
 - **Threat model** (`docs/threat-model.md`): covers a passive network observer (DTLS-SRTP), a hostile chat channel (safety code), malicious relays (E2E-encrypted signaling; they still see IP and timing), a malicious peer (sees your IP; can't do anything beyond the protocol; all input validated), GitHub Pages compromise (out of scope; mention reproducible builds and release tags), and a third person with the relay link (room is locked to the first pair).
 
 ---
+
+**Phase 5 notes:** `check-build` (`scripts/check-build.mjs`, run in CI after `build`) enforces the CSP, the absence of test code and the size budget. The CSP is built into `index.html` by a small plugin in `vite.config.ts` (build only; dev needs inline scripts). Test builds add `ws://localhost:*` to `connect-src`; production never does. The service worker is in `prompt` mode with no `skipWaiting`/`clientsClaim`, so a new version never takes over a live call.
 
 ## 10. Testing strategy
 
@@ -563,7 +565,7 @@ Scenarios per pair (at minimum iOS↔Android, iOS↔desktop Firefox, Android↔d
 ## 11. CI/CD
 
 - `ci.yml` (PRs and main): `pnpm install --frozen-lockfile` → `lint` (ESLint flat config + typescript-eslint + react-hooks) → `typecheck` (`tsc --noEmit`) → `test` (vitest with coverage gate) → `playwright install --with-deps chromium firefox webkit` → `e2e` → `build` → bundle budget check (`scripts/check-size.mjs`: initial JS ≤ 180 KB gzip; the relay chunk is excluded).
-- `deploy.yml` (push to main, and tags): build with `VITE_BASE=/tincan-call/`, then `actions/upload-pages-artifact` + `actions/deploy-pages`.
+- `deploy.yml` (push to main, and tags): build with `VITE_BASE=/tincan-caller/`, then `actions/upload-pages-artifact` + `actions/deploy-pages`.
 - Dependabot weekly (npm + github-actions), grouped minor/patch.
 - Pin exact versions in `package.json` (no `^`) for reproducible builds. The lockfile is committed.
 - TypeScript **6.0.x** (typescript-eslint currently supports `<6.1`; do **not** use TS 7).
@@ -582,7 +584,7 @@ Each phase ends with a commit, and all previous acceptance criteria still pass.
 5. A placeholder `App.tsx` showing APP_NAME. `config.ts`, `i18n/` skeleton.
 6. Add LICENSE (AGPL-3.0 full text), README stub, CODE_OF_CONDUCT (Contributor Covenant 2.1), CONTRIBUTING, SECURITY (private vulnerability reporting through GitHub Security Advisories), issue/PR templates, dependabot, `ci.yml` and `deploy.yml`.
 
-**Acceptance criteria:** `pnpm lint && pnpm typecheck && pnpm test && pnpm build` pass; one trivial Playwright test (page title) passes on chromium and firefox; `dist/` assets reference the `/tincan-call/` base when `VITE_BASE` is set.
+**Acceptance criteria:** `pnpm lint && pnpm typecheck && pnpm test && pnpm build` pass; one trivial Playwright test (page title) passes on chromium and firefox; `dist/` assets reference the `/tincan-caller/` base when `VITE_BASE` is set.
 
 ### Phase 1 — Pure core: encoding, token, SDP, SAS, control, stats, diagnostics, settings
 1. Implement `core/encoding/*`, `core/token/token.ts` (6.3), `core/sdp/{extract,build,candidates}.ts` (6.4, 6.5), `core/rtc/{sas,control,stats,diagnostics}.ts` (6.7–6.10; sas.ts is pure given inputs), `core/settings/settings.ts` (6.13), and `core/signaling/link.ts` (fragment parse/build, input extraction regex).

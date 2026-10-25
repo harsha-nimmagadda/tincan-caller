@@ -6,4 +6,4 @@ test-results
 .env*
 *.local
 .DS_Store
-dist-test
+dist-*

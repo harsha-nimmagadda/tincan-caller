@@ -23,7 +23,9 @@ export const RELAY_MAX_EVENT_AGE_S = 60;
 
 /** AGPL §13: users of a network service must be offered the source. Set VITE_SOURCE_URL in forks. */
 export const SOURCE_URL: string =
-  import.meta.env.VITE_SOURCE_URL ?? 'https://github.com/OWNER/tincan-call';
+  // `import.meta.env` is absent outside Vite (plain Node scripts, Playwright specs importing core code).
+  (import.meta as { env?: ImportMetaEnv }).env?.VITE_SOURCE_URL ??
+  'https://github.com/harsha-nimmagadda/tincan-caller';
 export const APP_VERSION: string = typeof __APP_VERSION__ === 'string' ? __APP_VERSION__ : '0.0.0';
 export const INVITE_AGE_SHOWN_MS = 5 * 60_000;
 export const LICENSE_NAME = 'AGPL-3.0';

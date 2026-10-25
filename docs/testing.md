@@ -61,3 +61,25 @@ Accessibility: Lighthouse accessibility was **100** on all 12 screens/states. Re
 | Android Back button during the call asks "End the call?"                                                              | ☐      |
 | Screen stays awake for 5 minutes in a call (wake lock)                                                                | ☐      |
 | Picture in picture works (button in "More"); auto‑PiP when switching apps (Chrome/Safari)                             | ☐      |
+
+## Phase 5 — PWA, offline and hardening
+
+Automated (`pnpm e2e --project=pwa`, plus `pnpm check-build` after `pnpm build`):
+
+- **Installability:** manifest fields, 192/512 PNG + 512 maskable icons, apple-touch-icon, no orientation lock, and Chrome's own `Page.getInstallabilityErrors` is empty. (Lighthouse 12+ dropped its PWA category, so Chrome's installability check is the source of truth.)
+- **Offline (scenario 8):** the shell loads with the network gone and two offline devices still connect, in Chromium, Firefox and WebKit. The QR scanner worker is precached, so scanning works offline too.
+  _Chromium note:_ Playwright's offline emulation also blocks Chromium's WebRTC sockets (a real offline LAN would not), so for Chromium "offline" means the web server is stopped. Firefox/WebKit use `context.setOffline`.
+- **CSP:** a full call + QR scan + settings + About raise **zero** `securitypolicyviolation` events in all three engines. `check-build` enforces the strict policy on the production build (no `ws://`, no `unsafe-inline` scripts, no debug/test code) and the 180 KB gzip initial-JS budget.
+- **Frame-busting:** inside another origin's iframe the app renders only "Open Tincan directly".
+- **Token hygiene:** no token in any request URL, `Referer`, console message or storage; no `#` ever sent; fragment stripped after reading.
+- **Update flow (was a manual check):** two builds are served from a switchable server; a deploy in the middle of a call neither reloads nor prompts; the prompt appears only after hangup and Reload applies the new version.
+
+Manual (real devices, on the deployed HTTPS site):
+
+| Check                                                                                                                     | Android Chrome | iOS Safari |
+| ------------------------------------------------------------------------------------------------------------------------- | -------------- | ---------- |
+| Install: Chrome offers "Install app" / Share → Add to Home Screen; icon and splash look right (maskable icon not clipped) | ☐              | ☐          |
+| iOS hint shows in Safari tab, disappears after dismiss, and never shows in the installed app                              | n/a            | ☐          |
+| Open the installed app in airplane mode: the shell loads and the offline notice shows                                     | ☐              | ☐          |
+| Two phones on one hotspot with no internet: a QR call connects                                                            | ☐              | ☐          |
+| Deploy a new version while in a call: no reload; after hangup the "new version" bar appears; Reload applies it            | ☐              | ☐          |

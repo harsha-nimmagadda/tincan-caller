@@ -21,7 +21,7 @@ jobs:
         with: { node-version: 24, cache: pnpm }
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-        env: { VITE_BASE: /tincan-call/ }
+        env: { VITE_BASE: /tincan-caller/ }
       - uses: actions/upload-pages-artifact@v3
         with: { path: dist }
       - id: deployment

@@ -4,7 +4,9 @@ import { t, type MessageKey } from './i18n';
 import { useStore } from './state/store';
 import type { SessionState } from './core/rtc/session-types';
 import { Dialog } from './ui/components/Dialog';
+import { OfflineBadge } from './ui/components/OfflineBadge';
 import { ToastHost } from './ui/components/ToastHost';
+import { UpdatePrompt } from './ui/components/UpdatePrompt';
 import { About } from './ui/screens/About';
 import { Bridge } from './ui/screens/Bridge';
 import { CallEnded } from './ui/screens/CallEnded';
@@ -88,6 +90,8 @@ export function App() {
       {screen === 'about' && <About />}
       {screen === 'bridge' && <Bridge />}
       <StateAnnouncer />
+      <UpdatePrompt />
+      <OfflineBadge />
       <ToastHost />
       {confirm === 'end-call' ? (
         <Dialog
