@@ -1,10 +1,16 @@
-import type { CandidateType, IceDescription } from '../token/types';
+import type { CandidateType, IceDescription, TokenCandidate } from '../token/types';
 
 const TYPE_PREF: Record<CandidateType, number> = { host: 126, prflx: 110, srflx: 100, relay: 0 };
 
 /** Multiplication, not shifts: `126 << 24` overflows int32 (Rules §8). */
 export function candidatePriority(type: CandidateType, index: number): number {
   return TYPE_PREF[type] * 16777216 + (65535 - index) * 256 + 255;
+}
+
+/** `candidate:...` attribute value (no `a=` prefix) for the candidate at `index` in the token. */
+export function candidateAttribute(c: TokenCandidate, index: number): string {
+  const related = c.type === 'host' ? '' : ' raddr 0.0.0.0 rport 0';
+  return `candidate:${index + 1} 1 udp ${candidatePriority(c.type, index)} ${c.address} ${c.port} typ ${c.type}${related}`;
 }
 
 function fingerprintText(fp: Uint8Array): string {
@@ -31,12 +37,7 @@ export function buildRemoteSdp(d: IceDescription): string {
     'a=sctp-port:5000',
     'a=max-message-size:262144',
   ];
-  d.candidates.forEach((c, i) => {
-    const related = c.type === 'host' ? '' : ' raddr 0.0.0.0 rport 0';
-    lines.push(
-      `a=candidate:${i + 1} 1 udp ${candidatePriority(c.type, i)} ${c.address} ${c.port} typ ${c.type}${related}`,
-    );
-  });
+  d.candidates.forEach((c, i) => lines.push(`a=${candidateAttribute(c, i)}`));
   lines.push('a=end-of-candidates');
   return lines.join('\r\n') + '\r\n';
 }

@@ -3,7 +3,7 @@
 Serverless, peer-to-peer 1:1 video calling PWA. No accounts, no backend: you exchange a small invite
 link or QR code and the call goes directly between the two browsers.
 
-> **Status:** under development (Phase 1 of [docs/PLAN.md](docs/PLAN.md)). Not usable yet.
+> **Status:** under development (Phase 2 of [docs/PLAN.md](docs/PLAN.md)). Not usable yet.
 
 ## Limitations (by design)
 

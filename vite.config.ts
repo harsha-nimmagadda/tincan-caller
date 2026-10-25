@@ -8,6 +8,13 @@ export default defineConfig(({ mode }) => {
   return {
     base: env['VITE_BASE'] ?? '/',
     plugins: [react(), tailwindcss(), ...(mode === 'https' ? [basicSsl()] : [])],
-    build: { target: 'es2022' },
+    build: {
+      target: 'es2022',
+      outDir: mode === 'test' ? 'dist-test' : 'dist',
+      rollupOptions: {
+        // The debug harness ships only in the e2e (`--mode test`) build, never in production.
+        input: { main: 'index.html', ...(mode === 'test' ? { debug: 'src/debug.html' } : {}) },
+      },
+    },
   };
 });

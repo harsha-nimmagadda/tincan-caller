@@ -19,7 +19,9 @@
     "test": "vitest run --coverage",
     "test:watch": "vitest",
     "e2e": "playwright test",
-    "capture-fixtures": "node scripts/capture-sdp-fixtures.ts"
+    "capture-fixtures": "node scripts/capture-sdp-fixtures.ts",
+    "build:test": "tsc --noEmit && vite build --mode test",
+    "preview:test": "vite preview --mode test --port 4173 --strictPort"
   },
   "dependencies": {
     "react": "19.3.1",

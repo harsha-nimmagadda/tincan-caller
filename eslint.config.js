@@ -5,7 +5,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import i18next from 'eslint-plugin-i18next';
 
 export default tseslint.config(
-  { ignores: ['dist', 'coverage', 'playwright-report', 'test-results'] },
+  { ignores: ['dist', 'dist-test', 'coverage', 'playwright-report', 'test-results'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

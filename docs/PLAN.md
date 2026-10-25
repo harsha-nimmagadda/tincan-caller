@@ -316,6 +316,8 @@ events: state | remoteStream | remoteMediaState | sas | warning
 2. `await pc.setRemoteDescription({ type: 'offer', sdp: build(token) })`, then `await pc.setLocalDescription()` (implicit answer), then gather.
 3. Generate `nB = crypto.getRandomValues(16 bytes)`, `commit = SHA-256(nB)[0..16]`, `offerRef` from the offer's ufrag:pwd. Encode the answer token.
 4. Start a 2-minute soft timer to show the hint "Waiting… did the caller enter your reply code?" (not a failure).
+5. **Keep-warm (added in Phase 2 after testing; not part of the original plan).** While waiting (until `ctl` first opens) re-add the invite's candidates with `addIceCandidate` every 8 s (`candidateAttribute()` in `core/sdp/build.ts`). Reason: the callee's ICE checks start immediately, the caller answers them before it knows the callee, and if the callee then goes quiet that half-open state goes stale: a Firefox callee failed for any reply slower than ~30 s. Verified fixed up to 150 s (chromium→firefox) and 90 s for the other pairs; covered by `test/e2e/calls/slow-reply.spec.ts`. Known remaining gap: firefox caller → webkit callee still stalls after ~35 s.
+6. Also: ICE `failed` before `ctl` has ever opened is **not** fatal on the callee (it cannot know whether the caller has applied the reply yet).
 
 **After `ctl` opens (both)**
 - Send `{t:'hello', proto: PROTOCOL_VERSION, app: <semver>}`. If the peer's `proto` differs → `failed('protocol-mismatch')`.

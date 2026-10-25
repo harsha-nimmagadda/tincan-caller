@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tincan debug harness</title>
+    <style>
+      body {
+        font:
+          14px system-ui,
+          sans-serif;
+        margin: 12px;
+        background: #111;
+        color: #ddd;
+      }
+      textarea {
+        width: 100%;
+        height: 56px;
+        font: 11px monospace;
+      }
+      video {
+        width: 240px;
+        height: 180px;
+        background: #000;
+        margin-right: 8px;
+      }
+      section {
+        margin-bottom: 12px;
+      }
+      button {
+        margin: 2px;
+      }
+      [hidden] {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <h3>Tincan debug harness (dev/test only)</h3>
+    <section>
+      <b>Caller</b>
+      <button data-testid="start-call">Start call</button>
+      <textarea data-testid="invite-code" readonly placeholder="invite code"></textarea>
+      <textarea data-testid="invite-link" readonly placeholder="invite link"></textarea>
+      <textarea data-testid="reply-input" placeholder="paste reply"></textarea>
+      <button data-testid="reply-submit">Submit reply</button>
+    </section>
+    <section>
+      <b>Callee</b>
+      <textarea data-testid="offer-input" placeholder="paste invite"></textarea>
+      <button data-testid="join-submit">Join</button>
+      <textarea data-testid="reply-code" readonly placeholder="reply code"></textarea>
+    </section>
+    <section>
+      state: <b data-testid="call-state">idle</b> · ended/failed:
+      <b data-testid="ended-reason"></b> · error: <b data-testid="error-panel"></b> · safety code:
+      <b data-testid="sas-code"></b>
+    </section>
+    <section>
+      <button data-testid="btn-mic">Mic</button>
+      <button data-testid="btn-cam">Cam</button>
+      <button data-testid="btn-hangup">Hang up</button>
+      <span data-testid="remote-mic-off" hidden>[remote mic off]</span>
+      <span data-testid="remote-cam-off" hidden>[remote cam off]</span>
+      <button data-testid="tap-to-play" hidden>Tap to start audio</button>
+    </section>
+    <section>
+      <video data-testid="local-video" autoplay muted playsinline></video>
+      <video data-testid="remote-video" autoplay playsinline></video>
+    </section>
+    <script type="module" src="/src/debug.ts"></script>
+  </body>
+</html>
