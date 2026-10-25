@@ -486,6 +486,15 @@ State `screen` in the store: `home | lobby | create | join | in-call | ended | s
 - **Settings**: STUN list, TURN list with [Test] (port the POC test: pass when a `relay` candidate appears within 5 s), force relay (disabled unless TURN is enabled), relay signaling toggle and relay list (with [Test] = connect + EOSE within 5 s), quality, default mic/cam, show stats, [Reset all].
 - **About**: version, protocol version, **link to the source code repository (required by AGPL §13)**, license, privacy summary.
 
+**Phase 4 implementation notes (not in the original plan):**
+- A `bridge` screen exists for the reply-link tab of §8.3 (it is not in the screen list above).
+- The app also reacts to `hashchange`, so pasting an invite link into the address bar of an already-open tab works; it never interrupts a live call.
+- The raw invite/reply code sits in a collapsed `<details>` (`invite-code`/`reply-code`); the QR wrapper carries the full link in `data-link` for tests.
+- Relay-mode UI, the TURN editor/Test button and the iOS install hint are deferred to Phases 6, 7 and 5. A `#r=` link currently just shows a notice.
+- `src/testing/` (fake cameras/mics, test hooks) is loaded only when built with `--mode test`; production builds contain none of it.
+- `eslint-plugin-i18next` misses JSX that is an arrow function's expression body, so `pnpm lint` also runs `scripts/check-no-literal-jsx.mjs`.
+- `SOURCE_URL` in `src/config.ts` is a placeholder (`github.com/OWNER/tincan-call`) until the repository exists; set `VITE_SOURCE_URL` at build time or edit it before release (AGPL §13).
+
 ### 8.2 QR
 - Generate with `qrcode.react` (`QRCodeSVG`, `level="M"`, with margin), encoding the **full link**, so phones' native camera apps also work.
 - Scan: use `BarcodeDetector` if `'BarcodeDetector' in window` and it supports `qr_code`; otherwise use **jsQR in a Web Worker** (`qr-decode.worker.ts`, lazy-loaded). Camera via `getUserMedia({video: {facingMode: 'environment'}})`, scanning frames at ~8 fps from an offscreen canvas. Release the camera on close. Also support [Upload image]. **If the call's own camera is live, reuse that track for scanning on desktop; on mobile, stop the scan stream before returning to the call.**

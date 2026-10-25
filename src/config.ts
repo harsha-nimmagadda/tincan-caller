@@ -20,3 +20,10 @@ export const RELAY_KIND = 25050;
 export const RELAY_HELLO_INTERVAL_MS = 3000;
 export const RELAY_RESEND_MS = 4000;
 export const RELAY_MAX_EVENT_AGE_S = 60;
+
+/** AGPL §13: users of a network service must be offered the source. Set VITE_SOURCE_URL in forks. */
+export const SOURCE_URL: string =
+  import.meta.env.VITE_SOURCE_URL ?? 'https://github.com/OWNER/tincan-call';
+export const APP_VERSION: string = typeof __APP_VERSION__ === 'string' ? __APP_VERSION__ : '0.0.0';
+export const INVITE_AGE_SHOWN_MS = 5 * 60_000;
+export const LICENSE_NAME = 'AGPL-3.0';

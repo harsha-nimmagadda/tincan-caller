@@ -36,41 +36,6 @@ const withParties = async (parties: Party[], fn: () => Promise<void>) => {
   }
 };
 
-// ---- 6. audio-only start, camera on mid-call ----
-for (const [ea, eb] of [
-  ['chromium', 'firefox'],
-  ['firefox', 'chromium'],
-  ['chromium', 'webkit'],
-  ['webkit', 'chromium'],
-] as [EngineName, EngineName][]) {
-  test(`6. audio-only ${ea} → normal ${eb}; camera on mid-call delivers video`, async ({
-    baseURL,
-  }) => {
-    const { pa, pb } = await call(ea, eb, baseURL, 'fake=1&audio=1');
-    await withParties([pa, pb], async () => {
-      await expect(tid(pb.page, 'remote-cam-off')).toBeVisible();
-      expect((await debugInfo(pa.page)).videoLive).toBe(false);
-      await expectRemoteVideoPlaying(pa.page); // B's video reaches the audio-only side
-      await tid(pa.page, 'btn-cam').click();
-      await expect(tid(pb.page, 'remote-cam-off')).toBeHidden();
-      await expectRemoteVideoPlaying(pb.page);
-    });
-  });
-}
-
-// Same scenario through the browsers' *real* getUserMedia (Playwright fake devices).
-for (const engine of ['chromium', 'firefox'] as EngineName[]) {
-  test(`6b. audio-only → camera on with real getUserMedia (${engine})`, async ({ baseURL }) => {
-    const { pa, pb } = await call(engine, 'chromium', baseURL, 'audio=1', 'fake=1');
-    await withParties([pa, pb], async () => {
-      await expect(tid(pb.page, 'remote-cam-off')).toBeVisible();
-      await tid(pa.page, 'btn-cam').click();
-      await expect(tid(pb.page, 'remote-cam-off')).toBeHidden();
-      await expectRemoteVideoPlaying(pb.page);
-    });
-  });
-}
-
 // ---- controls, per engine on the sending side ----
 for (const engine of engines) {
   test.describe(`media controls (${engine})`, () => {

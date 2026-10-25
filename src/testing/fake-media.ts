@@ -1,7 +1,7 @@
 // Dev/test-only: a fake `navigator.mediaDevices` with two cameras (front/back), a microphone and
 // two speakers, backed by canvas + oscillator tracks. It lets e2e drive the real MediaController
 // (flip, device switching, unplug) in every engine, without relying on browser fake-device flags.
-import type { MediaDevicesLike } from './core/media/media-controller';
+import type { MediaDevicesLike } from '../core/media/media-controller';
 
 interface FakeCam {
   deviceId: string;
@@ -33,7 +33,7 @@ function ideal(v: unknown): unknown {
     : v;
 }
 
-export function createFakeMediaDevices() {
+export function createFakeMediaDevices(opts: { deny?: boolean } = {}) {
   const events = new EventTarget();
   let cams: FakeCam[] = [FRONT, BACK];
   const live = new Map<string, Set<MediaStreamTrack>>();
@@ -118,6 +118,7 @@ export function createFakeMediaDevices() {
 
   const devices: MediaDevicesLike = {
     async getUserMedia(c) {
+      if (opts.deny) throw new DOMException('permission denied', 'NotAllowedError');
       const tracks: MediaStreamTrack[] = [];
       if (c.audio) tracks.push(audioTrack());
       if (c.video) tracks.push(videoTrack(pickCam(c.video)));

@@ -14,9 +14,12 @@ export default tseslint.config(
     rules: { '@typescript-eslint/no-explicit-any': 'error' },
   },
   {
+    files: ['src/ui/**/*.{ts,tsx}', 'src/App.tsx'],
+    ...reactHooks.configs.flat.recommended,
+  },
+  {
+    // Rule 11: no hardcoded English in JSX text. Scoped to UI components.
     files: ['src/ui/**/*.tsx', 'src/App.tsx'],
-    plugins: { 'react-hooks': reactHooks },
-    rules: { ...reactHooks.configs.recommended.rules },
     ...i18next.configs['flat/recommended'],
   },
   {
@@ -31,6 +34,11 @@ export default tseslint.config(
         { name: 'document', message: 'Pure core: no DOM access.' },
       ],
     },
+  },
+  {
+    // Runs page code (document/window) inside Playwright evaluate callbacks.
+    files: ['scripts/a11y-audit.mjs'],
+    languageOptions: { globals: { ...globals.browser, ...globals.node } },
   },
   {
     files: ['*.config.{js,ts}', 'scripts/**', 'test/**'],

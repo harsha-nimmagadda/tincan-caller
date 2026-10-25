@@ -13,7 +13,7 @@
     "dev:https": "vite --host --mode https",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "lint": "eslint .",
+    "lint": "eslint . && node scripts/check-no-literal-jsx.mjs",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --coverage",
@@ -24,6 +24,8 @@
     "preview:test": "vite preview --mode test --port 4173 --strictPort"
   },
   "dependencies": {
+    "jsqr": "1.4.0",
+    "qrcode.react": "4.2.0",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "zustand": "5.0.16"

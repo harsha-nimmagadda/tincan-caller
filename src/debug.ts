@@ -6,7 +6,7 @@
 //   audio=1    start with the camera off (audio-only mode)
 //   quality=   auto | data-saver | high
 //   mobile=1   behave like a touch device (flip by facingMode; close-then-open device switching)
-import { createFakeMediaDevices } from './debug-fake-media';
+import { createFakeMediaDevices } from './testing/fake-media';
 import { CallSession } from './core/rtc/call-session';
 import type { SessionState } from './core/rtc/session-types';
 import { maxBitrate } from './core/media/constraints';
