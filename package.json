@@ -19,7 +19,7 @@
     "test": "vitest run --coverage",
     "test:watch": "vitest",
     "e2e": "playwright test",
-    "capture-fixtures": "node --experimental-strip-types scripts/capture-sdp-fixtures.ts"
+    "capture-fixtures": "node scripts/capture-sdp-fixtures.ts"
   },
   "dependencies": {
     "react": "19.3.1",

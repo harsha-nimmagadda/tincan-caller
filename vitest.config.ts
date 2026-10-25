@@ -8,7 +8,13 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/core/**'],
-      // Phase 1 adds the >=90% gate for encoding, token, sdp, rtc/{sas,stats,diagnostics,control}.
+      // §10.1 gate. relay-room joins this list in Phase 6.
+      thresholds: {
+        'src/core/encoding/**': { lines: 90 },
+        'src/core/token/**': { lines: 90 },
+        'src/core/sdp/**': { lines: 90 },
+        'src/core/rtc/{sas,stats,diagnostics,control}.ts': { lines: 90 },
+      },
     },
   },
 });

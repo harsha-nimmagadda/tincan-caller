@@ -559,7 +559,7 @@ Scenarios per pair (at minimum iOS↔Android, iOS↔desktop Firefox, Android↔d
 
 ---
 
-## 12. Phases
+## 12. Implementation phases (9 phases: Phase 0 – Phase 8)
 
 Each phase ends with a commit, and all previous acceptance criteria still pass.
 
