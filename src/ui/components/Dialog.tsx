@@ -11,18 +11,24 @@ interface Props {
 /** Modal dialog: focus moves in, Escape closes, focus returns to the opener. */
 export function Dialog({ title, body, children, onClose, testId }: Props) {
   const ref = useRef<HTMLDivElement>(null);
+  // Callers pass a fresh closure every render. Depending on it would re-run the effect (and re-focus
+  // the Close button) on every re-render, which collapses an open <select> popup instantly.
+  const close = useRef(onClose);
+  useEffect(() => {
+    close.current = onClose;
+  });
   useEffect(() => {
     const opener = document.activeElement as HTMLElement | null;
     ref.current?.querySelector<HTMLElement>('[data-autofocus]')?.focus();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') close.current();
     };
     window.addEventListener('keydown', onKey);
     return () => {
       window.removeEventListener('keydown', onKey);
       opener?.focus?.();
     };
-  }, [onClose]);
+  }, []);
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/70 p-4 sm:items-center">
       <div

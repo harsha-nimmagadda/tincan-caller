@@ -136,11 +136,11 @@ describe('MediaController.start', () => {
     expect(log.find((l) => l.includes('video-constraints'))).toContain('"width":{"ideal":1280}');
     expect(c.snapshot).toMatchObject({ micOn: true, camOn: true, facing: 'user', canFlip: true });
   });
-  it('uses portrait constraints when the phone is upright', async () => {
+  it('asks in landscape terms even when upright (Android swaps the shape itself)', async () => {
     const { c, log } = setup({ portrait: true });
     await c.start({ video: true, quality: 'data-saver' });
     expect(log.find((l) => l.includes('video-constraints'))).toContain(
-      '"width":{"ideal":360},"height":{"ideal":640}',
+      '"width":{"ideal":640},"height":{"ideal":360}',
     );
   });
   it('audio-only start requests no video', async () => {

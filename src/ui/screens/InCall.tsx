@@ -134,6 +134,7 @@ export function InCall() {
             stream={local.stream}
             muted
             mirror={local.mirror}
+            fit="contain" // the whole camera picture, never a cropped part of it
             label={t('call.localVideo')}
             testId="local-video"
             className="h-full w-full"

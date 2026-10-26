@@ -1,7 +1,7 @@
 import type { QualityPreset } from '../settings/settings';
 import { isMobileDevice, isPortrait } from '../platform/orientation';
 import { Emitter } from '../util/emitter';
-import { audioConstraints, videoConstraints, type Facing } from './constraints';
+import { audioConstraints, QUALITY_PROFILES, videoConstraints, type Facing } from './constraints';
 import { EMPTY_DEVICES, parseDevices, type DeviceKind, type DeviceLists } from './devices';
 
 export interface MediaDevicesLike {
@@ -112,6 +112,7 @@ export class MediaController {
   private queue: Promise<unknown> = Promise.resolve();
   private stopped = false;
   private micLost = false;
+  private triedShape: boolean | null = null;
 
   constructor(env: Partial<MediaEnv> = {}) {
     this.env = { ...defaultEnv(), ...env };
@@ -261,6 +262,37 @@ export class MediaController {
     });
   }
 
+  /**
+   * Phones can hand back a landscape picture while held upright (or the reverse), and the peer then
+   * sees a sideways-shaped video. If the camera's shape disagrees with how the phone is held, ask
+   * for the matching shape.
+   */
+  async syncOrientation(): Promise<void> {
+    const track = this.video;
+    if (!track || !this.env.isMobile() || track.readyState !== 'live') return;
+    const { width, height } = track.getSettings();
+    if (!width || !height) return;
+    const portrait = this.env.isPortrait();
+    if (width > height !== portrait) {
+      this.triedShape = null;
+      return; // already matches
+    }
+    if (this.triedShape === portrait) return; // asked once for this orientation; do not fight the browser
+    this.triedShape = portrait;
+    const p = QUALITY_PROFILES[this.quality];
+    const size = portrait ? p.portrait : p.landscape;
+    try {
+      await track.applyConstraints({
+        width: { ideal: size.width },
+        height: { ideal: size.height },
+        aspectRatio: { ideal: size.aspectRatio },
+      });
+    } catch {
+      return; // keep what we have
+    }
+    this.emitChange();
+  }
+
   /** Stops every track and removes all listeners. Safe to call repeatedly. */
   stop(): void {
     this.stopped = true;
@@ -285,8 +317,11 @@ export class MediaController {
     exact?: boolean;
   }): MediaTrackConstraints {
     // `deviceId: undefined` really means "the default camera" — callers pass the preference.
+    // Always ask in landscape terms: Chrome on Android (and WebKit) swap width and height to match
+    // how the phone is held, so asking for portrait while upright is flipped back to landscape.
+    // `syncOrientation` corrects the rare browser that does not swap.
     return videoConstraints(this.quality, {
-      portrait: this.env.isPortrait(),
+      portrait: false,
       ...(o.deviceId ? { deviceId: o.deviceId } : { facingMode: o.facing ?? this.facing }),
       ...(o.exact ? { exactFacing: true } : {}),
     });
@@ -386,7 +421,10 @@ export class MediaController {
 
   private setTrack(kind: 'audioinput' | 'videoinput', track: MediaStreamTrack): void {
     if (kind === 'audioinput') this.audio = this.adopt('audio', track);
-    else this.video = this.adopt('video', track);
+    else {
+      this.video = this.adopt('video', track);
+      void this.run(() => this.syncOrientation());
+    }
   }
 
   private release(kind: 'audioinput' | 'videoinput'): void {
@@ -449,6 +487,13 @@ export class MediaController {
     this.disposers.push(() =>
       this.env.mediaDevices.removeEventListener('devicechange', onDeviceChange),
     );
+
+    if (typeof window !== 'undefined') {
+      // Turning the phone changes the shape we should be capturing.
+      const onTurn = () => void this.run(() => this.syncOrientation());
+      window.addEventListener('resize', onTurn);
+      this.disposers.push(() => window.removeEventListener('resize', onTurn));
+    }
 
     const vis = this.env.visibility;
     if (vis) {
